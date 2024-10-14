@@ -8,9 +8,9 @@ from PIL import Image
 
 API_URL = "https://api.bfl.ml"
 API_ENDPOINTS = {
-    "flux.1-pro": "flux-pro",
-    "flux.1-dev": "flux-dev",
-    "flux.1.1-pro": "flux-pro-1.1",
+    "fluxAI.1-pro": "fluxAI-pro",
+    "fluxAI.1-dev": "fluxAI-dev",
+    "fluxAI.1.1-pro": "fluxAI-pro-1.1",
 }
 
 
@@ -38,7 +38,7 @@ class ImageRequest:
         self,
         # api inputs
         prompt: str,
-        name: str = "flux.1.1-pro",
+        name: str = "fluxAI.1.1-pro",
         width: int | None = None,
         height: int | None = None,
         num_steps: int | None = None,
@@ -98,10 +98,10 @@ class ImageRequest:
                     f"safety_tolerance must be between 0 and 6, got {interval}"
                 )
 
-            if name == "flux.1-dev":
+            if name == "fluxAI.1-dev":
                 if interval is not None:
-                    raise ValueError("Interval is not supported for flux.1-dev")
-            if name == "flux.1.1-pro":
+                    raise ValueError("Interval is not supported for fluxAI.1-dev")
+            if name == "fluxAI.1.1-pro":
                 if (
                     interval is not None
                     or num_steps is not None
@@ -109,7 +109,7 @@ class ImageRequest:
                 ):
                     raise ValueError(
                         "Interval, num_steps and guidance are not supported for "
-                        "flux.1.1-pro"
+                        "fluxAI.1.1-pro"
                     )
 
         self.name = name

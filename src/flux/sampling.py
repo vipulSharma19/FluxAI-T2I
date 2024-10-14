@@ -5,8 +5,8 @@ import torch
 from einops import rearrange, repeat
 from torch import Tensor
 
-from .model import Flux
-from .modules.conditioner import HFEmbedder
+from model import Flux
+from modules.conditioner import HFEmbedder
 
 
 def get_noise(

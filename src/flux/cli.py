@@ -8,11 +8,10 @@ import torch
 from einops import rearrange
 from fire import Fire
 from PIL import ExifTags, Image
-
-from flux.sampling import denoise, get_noise, get_schedule, prepare, unpack
-from flux.util import (configs, embed_watermark, load_ae, load_clip,
+from sampling import denoise, get_noise, get_schedule, prepare, unpack
+from util import (configs, embed_watermark, load_ae, load_clip,
                        load_flow_model, load_t5)
-from transformers import pipeline
+#from transformers import pipeline
 
 NSFW_THRESHOLD = 0.85
 
@@ -34,7 +33,7 @@ def parse_prompt(options: SamplingOptions) -> SamplingOptions | None:
         "- '/w <width>' will set the width of the generated image\n"
         "- '/h <height>' will set the height of the generated image\n"
         "- '/s <seed>' sets the next seed\n"
-        "- '/g <guidance>' sets the guidance (flux-dev only)\n"
+        "- '/g <guidance>' sets the guidance (fluxAI-dev only)\n"
         "- '/n <steps>' sets the number of steps\n"
         "- '/q' to quit"
     )
@@ -95,7 +94,7 @@ def parse_prompt(options: SamplingOptions) -> SamplingOptions | None:
 
 @torch.inference_mode()
 def main(
-    name: str = "flux-schnell",
+    name: str = "fluxAI-schnell",
     width: int = 1360,
     height: int = 768,
     seed: int | None = None,
@@ -112,7 +111,7 @@ def main(
     add_sampling_metadata: bool = True,
 ):
     """
-    Sample the flux model. Either interactively (set `--loop`) or run for a
+    Sample the fluxAI model. Either interactively (set `--loop`) or run for a
     single image.
 
     Args:
@@ -129,7 +128,7 @@ def main(
         guidance: guidance value used for guidance distillation
         add_sampling_metadata: Add the prompt to the image Exif metadata
     """
-    nsfw_classifier = pipeline("image-classification", model="Falconsai/nsfw_image_detection", device=device)
+    #nsfw_classifier = pipeline("image-classification", model="Falconsai/nsfw_image_detection", device=device)
 
     if name not in configs:
         available = ", ".join(configs.keys())
@@ -137,7 +136,7 @@ def main(
 
     torch_device = torch.device(device)
     if num_steps is None:
-        num_steps = 4 if name == "flux-schnell" else 50
+        num_steps = 4 if name == "fluxAI-schnell" else 50
 
     # allow for packing and conversion to latent space
     height = 16 * (height // 16)
@@ -155,7 +154,7 @@ def main(
             idx = 0
 
     # init all components
-    t5 = load_t5(torch_device, max_length=256 if name == "flux-schnell" else 512)
+    t5 = load_t5(torch_device, max_length=256 if name == "fluxAI-schnell" else 512)
     clip = load_clip(torch_device)
     model = load_flow_model(name, device="cpu" if offload else torch_device)
     ae = load_ae(name, device="cpu" if offload else torch_device)
@@ -194,7 +193,7 @@ def main(
             torch.cuda.empty_cache()
             t5, clip = t5.to(torch_device), clip.to(torch_device)
         inp = prepare(t5, clip, x, prompt=opts.prompt)
-        timesteps = get_schedule(opts.num_steps, inp["img"].shape[1], shift=(name != "flux-schnell"))
+        timesteps = get_schedule(opts.num_steps, inp["img"].shape[1], shift=(name != "fluxAI-schnell"))
 
         # offload TEs to CPU, load model to gpu
         if offload:
@@ -228,19 +227,19 @@ def main(
         x = rearrange(x[0], "c h w -> h w c")
 
         img = Image.fromarray((127.5 * (x + 1.0)).cpu().byte().numpy())
-        nsfw_score = [x["score"] for x in nsfw_classifier(img) if x["label"] == "nsfw"][0]
-        
-        if nsfw_score < NSFW_THRESHOLD:
-            exif_data = Image.Exif()
-            exif_data[ExifTags.Base.Software] = "AI generated;txt2img;flux"
-            exif_data[ExifTags.Base.Make] = "Black Forest Labs"
-            exif_data[ExifTags.Base.Model] = name
-            if add_sampling_metadata:
-                exif_data[ExifTags.Base.ImageDescription] = prompt
-            img.save(fn, exif=exif_data, quality=95, subsampling=0)
-            idx += 1
-        else:
-            print("Your generated image may contain NSFW content.")
+        # nsfw_score = [x["score"] for x in nsfw_classifier(img) if x["label"] == "nsfw"][0]
+        #
+        # if nsfw_score < NSFW_THRESHOLD:
+# Removed NSFW score related code
+
+        exif_data = Image.Exif()
+        exif_data[ExifTags.Base.Software] = "AI generated;txt2img;fluxAI"
+        exif_data[ExifTags.Base.Make] = "Black Forest Labs"
+        exif_data[ExifTags.Base.Model] = name
+        if add_sampling_metadata:
+            exif_data[ExifTags.Base.ImageDescription] = prompt
+        img.save(fn, exif=exif_data, quality=95, subsampling=0)
+        idx += 1
 
         if loop:
             print("-" * 80)

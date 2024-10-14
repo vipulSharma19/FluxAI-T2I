@@ -41,7 +41,7 @@ Together:
 
 ```bash
 cd $HOME && git clone https://github.com/black-forest-labs/flux
-cd $HOME/flux
+cd $HOME/fluxAI
 python3.10 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[all]"
@@ -79,13 +79,13 @@ export AE=<path_to_ae_sft_file>
 For interactive sampling run
 
 ```bash
-python -m flux --name <name> --loop
+python -m fluxAI --name <name> --loop
 ```
 
 Or to generate a single sample run
 
 ```bash
-python -m flux --name <name> \
+python -m fluxAI --name <name> \
   --height <height> --width <width> \
   --prompt "<prompt>"
 ```
@@ -99,7 +99,7 @@ streamlit run demo_st.py
 We also offer a Gradio-based demo for an interactive experience. To run the Gradio demo:
 
 ```bash
-python demo_gr.py --name flux-schnell --device cuda
+python demo_gr.py --name fluxAI-schnell --device cuda
 ```
 
 Options:
@@ -112,7 +112,7 @@ Options:
 To run the demo with the dev model and create a public link:
 
 ```bash
-python demo_gr.py --name flux-dev --share
+python demo_gr.py --name fluxAI-dev --share
 ```
 
 ## Diffusers integration
@@ -142,7 +142,7 @@ image = pipe(
     num_inference_steps=4, #use a larger number if you are using [dev]
     generator=torch.Generator("cpu").manual_seed(seed)
 ).images[0]
-image.save("flux-schnell.png")
+image.save("fluxAI-schnell.png")
 ```
 
 To learn more check out the [diffusers](https://huggingface.co/docs/diffusers/main/en/api/pipelines/flux) documentation
@@ -166,8 +166,8 @@ Usage from python:
 from flux.api import ImageRequest
 
 # this will create an api request directly but not block until the generation is finished
-request = ImageRequest("A beautiful beach", name="flux.1.1-pro")
-# or: request = ImageRequest("A beautiful beach", name="flux.1.1-pro", api_key="your_key_here")
+request = ImageRequest("A beautiful beach", name="fluxAI.1.1-pro")
+# or: request = ImageRequest("A beautiful beach", name="fluxAI.1.1-pro", api_key="your_key_here")
 
 # any of the following will block until the generation is finished
 request.url
@@ -183,12 +183,12 @@ request.image
 Usage from the command line:
 
 ```bash
-$ python -m flux.api --prompt="A beautiful beach" url
+$ python -m fluxAI.api --prompt="A beautiful beach" url
 https:<...>/sample.jpg
 
 # generate and save the result
-$ python -m flux.api --prompt="A beautiful beach" save outputs/api
+$ python -m fluxAI.api --prompt="A beautiful beach" save outputs/api
 
 # open the image directly
-$ python -m flux.api --prompt="A beautiful beach" image show
+$ python -m fluxAI.api --prompt="A beautiful beach" image show
 ```

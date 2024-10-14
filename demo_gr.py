@@ -28,7 +28,7 @@ class FluxGenerator:
         self.device = torch.device(device)
         self.offload = offload
         self.model_name = model_name
-        self.is_schnell = model_name == "flux-schnell"
+        self.is_schnell = model_name == "fluxAI-schnell"
         self.model, self.ae, self.t5, self.clip, self.nsfw_classifier = get_models(
             model_name,
             device=self.device,
@@ -144,9 +144,9 @@ class FluxGenerator:
             os.makedirs(os.path.dirname(filename), exist_ok=True)
             exif_data = Image.Exif()
             if init_image is None:
-                exif_data[ExifTags.Base.Software] = "AI generated;txt2img;flux"
+                exif_data[ExifTags.Base.Software] = "AI generated;txt2img;fluxAI"
             else:
-                exif_data[ExifTags.Base.Software] = "AI generated;img2img;flux"
+                exif_data[ExifTags.Base.Software] = "AI generated;img2img;fluxAI"
             exif_data[ExifTags.Base.Make] = "Black Forest Labs"
             exif_data[ExifTags.Base.Model] = self.model_name
             if add_sampling_metadata:
@@ -160,7 +160,7 @@ class FluxGenerator:
 
 def create_demo(model_name: str, device: str = "cuda" if torch.cuda.is_available() else "cpu", offload: bool = False):
     generator = FluxGenerator(model_name, device, offload)
-    is_schnell = model_name == "flux-schnell"
+    is_schnell = model_name == "fluxAI-schnell"
 
     with gr.Blocks() as demo:
         gr.Markdown(f"# Flux Image Generation Demo - Model: {model_name}")
@@ -207,7 +207,7 @@ def create_demo(model_name: str, device: str = "cuda" if torch.cuda.is_available
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Flux")
-    parser.add_argument("--name", type=str, default="flux-schnell", choices=list(configs.keys()), help="Model name")
+    parser.add_argument("--name", type=str, default="fluxAI-schnell", choices=list(configs.keys()), help="Model name")
     parser.add_argument("--device", type=str, default="cuda" if torch.cuda.is_available() else "cpu", help="Device to use")
     parser.add_argument("--offload", action="store_true", help="Offload model to CPU when not in use")
     parser.add_argument("--share", action="store_true", help="Create a public link to your demo")

@@ -7,9 +7,9 @@ from huggingface_hub import hf_hub_download
 from imwatermark import WatermarkEncoder
 from safetensors.torch import load_file as load_sft
 
-from flux.model import Flux, FluxParams
-from flux.modules.autoencoder import AutoEncoder, AutoEncoderParams
-from flux.modules.conditioner import HFEmbedder
+from model import Flux, FluxParams
+from modules.autoencoder import AutoEncoder, AutoEncoderParams
+from modules.conditioner import HFEmbedder
 
 
 @dataclass
@@ -24,7 +24,7 @@ class ModelSpec:
 
 
 configs = {
-    "flux-dev": ModelSpec(
+    "fluxAI-dev": ModelSpec(
         repo_id="black-forest-labs/FLUX.1-dev",
         repo_flow="flux1-dev.safetensors",
         repo_ae="ae.safetensors",
@@ -56,7 +56,7 @@ configs = {
             shift_factor=0.1159,
         ),
     ),
-    "flux-schnell": ModelSpec(
+    "fluxAI-schnell": ModelSpec(
         repo_id="black-forest-labs/FLUX.1-schnell",
         repo_flow="flux1-schnell.safetensors",
         repo_ae="ae.safetensors",

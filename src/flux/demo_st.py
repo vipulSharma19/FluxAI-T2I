@@ -11,11 +11,15 @@ from fire import Fire
 from PIL import ExifTags, Image
 from st_keyup import st_keyup
 from torchvision import transforms
-from transformers import pipeline
+#from transforms import pipeline
+import sys
+import os
 
-from flux.cli import SamplingOptions
-from flux.sampling import denoise, get_noise, get_schedule, prepare, unpack
-from flux.util import (
+# Add the src directory to the Python path
+
+from cli import SamplingOptions
+from sampling import denoise, get_noise, get_schedule, prepare, unpack
+from util import (
     configs,
     embed_watermark,
     load_ae,
@@ -33,8 +37,8 @@ def get_models(name: str, device: torch.device, offload: bool, is_schnell: bool)
     clip = load_clip(device)
     model = load_flow_model(name, device="cpu" if offload else device)
     ae = load_ae(name, device="cpu" if offload else device)
-    nsfw_classifier = pipeline("image-classification", model="Falconsai/nsfw_image_detection", device=device)
-    return model, ae, t5, clip, nsfw_classifier
+    #nsfw_classifier = pipeline("image-classification", model="Falconsai/nsfw_image_detection", device=device)
+    return model, ae, t5, clip
 
 
 def get_image() -> torch.Tensor | None:
@@ -65,8 +69,8 @@ def main(
     if name is None or not st.checkbox("Load model", False):
         return
 
-    is_schnell = name == "flux-schnell"
-    model, ae, t5, clip, nsfw_classifier = get_models(
+    is_schnell = name == "fluxAI-schnell"
+    model, ae, t5, clip = get_models(
         name,
         device=torch_device,
         offload=offload,
@@ -78,7 +82,7 @@ def main(
             "Image to Image",
             False,
             disabled=is_schnell,
-            help="Partially noise an image and denoise again to get variations.\n\nOnly works for flux-dev",
+            help="Partially noise an image and denoise again to get variations.\n\nOnly works for fluxAI-dev",
         )
         and not is_schnell
     )
@@ -152,7 +156,7 @@ def main(
         seed=seed,
     )
 
-    if name == "flux-schnell":
+    if name == "fluxAI-schnell":
         cols = st.columns([5, 1, 1, 5])
         with cols[1]:
             st.button("↩", on_click=increment_counter)
@@ -240,38 +244,39 @@ def main(
         x = rearrange(x[0], "c h w -> h w c")
 
         img = Image.fromarray((127.5 * (x + 1.0)).cpu().byte().numpy())
-        nsfw_score = [x["score"] for x in nsfw_classifier(img) if x["label"] == "nsfw"][0]
+        #nsfw_score = [x["score"] for x in nsfw_classifier(img) if x["label"] == "nsfw"][0]
 
-        if nsfw_score < NSFW_THRESHOLD:
-            buffer = BytesIO()
-            exif_data = Image.Exif()
-            if init_image is None:
-                exif_data[ExifTags.Base.Software] = "AI generated;txt2img;flux"
-            else:
-                exif_data[ExifTags.Base.Software] = "AI generated;img2img;flux"
-            exif_data[ExifTags.Base.Make] = "Black Forest Labs"
-            exif_data[ExifTags.Base.Model] = name
-            if add_sampling_metadata:
-                exif_data[ExifTags.Base.ImageDescription] = prompt
-            img.save(buffer, format="jpeg", exif=exif_data, quality=95, subsampling=0)
-
-            img_bytes = buffer.getvalue()
-            if save_samples:
-                print(f"Saving {fn}")
-                with open(fn, "wb") as file:
-                    file.write(img_bytes)
-                idx += 1
-
-            st.session_state["samples"] = {
-                "prompt": opts.prompt,
-                "img": img,
-                "seed": opts.seed,
-                "bytes": img_bytes,
-            }
-            opts.seed = None
+        # if nsfw_score < NSFW_THRESHOLD:
+        buffer = BytesIO()
+        exif_data = Image.Exif()
+        if init_image is None:
+            exif_data[ExifTags.Base.Software] = "AI generated;txt2img;fluxAI"
         else:
-            st.warning("Your generated image may contain NSFW content.")
-            st.session_state["samples"] = None
+            exif_data[ExifTags.Base.Software] = "AI generated;img2img;fluxAI"
+        exif_data[ExifTags.Base.Make] = "Black Forest Labs"
+        exif_data[ExifTags.Base.Model] = name
+        if add_sampling_metadata:
+            exif_data[ExifTags.Base.ImageDescription] = prompt
+        img.save(buffer, format="jpeg", exif=exif_data, quality=95, subsampling=0)
+
+        img_bytes = buffer.getvalue()
+        if save_samples:
+            print(f"Saving {fn}")
+            with open(fn, "wb") as file:
+                file.write(img_bytes)
+            idx += 1
+
+        st.session_state["samples"] = {
+            "prompt": opts.prompt,
+            "img": img,
+            "seed": opts.seed,
+            "bytes": img_bytes,
+        }
+        opts.seed = None
+
+        # else:
+        #     st.warning("Your generated image may contain NSFW content.")
+        #     st.session_state["samples"] = None
 
     samples = st.session_state.get("samples", None)
     if samples is not None:
